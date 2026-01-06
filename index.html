@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>やさしい薬局SNSナビ</title>
+    <meta name="description" content="調剤薬局のための安全・簡単SNS投稿作成ツール">
+    <meta name="theme-color" content="#225AD3">
+    <style>
+        /* Base Reset & Variables */
+        :root {
+            --primary: #225AD3;
+            --primary-light: #0179E8;
+            --primary-bg: #E3F2FD;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --bg-body: #F5F7FA;
+            --bg-card: #FFFFFF;
+            --border: #D1D9E6;
+            --danger: #FF5252;
+            --warning: #FF9800;
+            --success: #4CAF50;
+            --radius: 12px;
+            --shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --header-bg: linear-gradient(135deg, var(--primary), var(--primary-light));
+            --header-text: white;
+        }
+
+        /* Dark Mode Variables */
+        body.dark-mode {
+            --primary: #448AFF;
+            --primary-light: #2979FF;
+            --primary-bg: #1A237E;
+            --text-main: #E0E0E0;
+            --text-sub: #B0BEC5;
+            --bg-body: #121212;
+            --bg-card: #1E1E1E;
+            --border: #333333;
+            --shadow: 0 4px 6px rgba(0,0,0,0.4);
+            --header-bg: #1F1F1F;
+            --header-text: #E0E0E0;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Layout */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 0 40px 0;
+        }
+
+        /* Header */
+        header {
+            background: var(--header-bg);
+            color: var(--header-text);
+            padding: 12px 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-title-area {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        h1 {
+            font-size: 1.1rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .header-sub {
+            font-size: 0.75rem;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-icon-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: var(--header-text);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .header-icon-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Components */
+        .section {
+            padding: 16px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin: 20px 0 12px 0;
+            display: flex;
+            align-items: center;
+            color: var(--primary);
+        }
+
+        .section-title::before {
+            content: '';
+            display: block;
+            width: 4px;
+            height: 18px;
+            background: var(--primary);
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        /* Selection Grids */
+        .select-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .select-grid.triple {
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        .select-item {
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 8px;
+            text-align: center;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            min-height: 60px;
+            color: var(--text-main);
+        }
+
+        .select-item.active {
+            background: var(--primary-bg);
+            border-color: var(--primary);
+            color: var(--primary);
+            font-weight: bold;
+            box-shadow: 0 0 0 2px var(--primary) inset;
+        }
+
+        /* Forms */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="url"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg-body);
+            color: var(--text-main);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Action Buttons */
+        .btn-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 50px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(34, 90, 211, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-sub);
+            border: 1px solid var(--border);
+        }
+
+        .btn-danger {
+            background: white;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .btn-copy {
+            background: var(--success);
+            color: white;
+            margin-top: 10px;
+        }
+
+        /* Output Area */
+        #outputSection {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--border);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border-radius: 8px;
+            color: var(--text-sub);
+            font-weight: bold;
+        }
+
+        .tab.active {
+            background: var(--bg-card);
+            color: var(--primary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* Variation Selector */
+        .variation-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            justify-content: center;
+        }
+
+        .var-btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            background: var(--bg-card);
+            color: var(--text-main);
+            cursor: pointer;
+        }
+        
+        .var-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .result-box {
+            background: var(--bg-body);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+            position: relative;
+            color: var(--text-main);
+        }
+
+        /* NG Check Styles */
+        .ng-alert-box {
+            background: #FFF3E0;
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            display: none;
+            color: #333;
+        }
+
+        .ng-title {
+            color: #D84315;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .ng-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        .ng-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px dashed rgba(0,0,0,0.1);
+        }
+
+        .ng-word {
+            color: var(--danger);
+            font-weight: bold;
+            text-decoration: line-through;
+            margin-right: 8px;
+        }
+
+        .safe-word {
+            color: var(--success);
+            font-weight: bold;
+        }
+
+        .btn-fix {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #333;
+        }
+
+        /* CTA Section */
+        .cta-options label {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            font-weight: normal;
+        }
+        
+        .cta-options input {
+            margin-right: 10px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px 20px 10px 20px;
+            color: var(--text-sub);
+            font-size: 0.8rem;
+            border-top: 1px solid var(--border);
+            margin-top: 40px;
+            background: var(--bg-card);
+        }
+
+        .footer-link {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--primary);
+            text-decoration: none;
+            border: 1px solid var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+        }
+
+        /* SVG Icons */
+        .icon {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            padding: 20px;
+            backdrop-filter: blur(2px);
+        }
+        .modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            color: var(--text-main);
+        }
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-sub);
+            cursor: pointer;
+            line-height: 1;
+            padding: 5px;
+        }
+
+        /* Logo Preview Styles */
+        .logo-preview-box {
+            width: 60px; 
+            height: 60px; 
+            border-radius: 50%; 
+            background: var(--bg-body); 
+            border: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .logo-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .logo-placeholder {
+            font-size: 0.7rem; 
+            color: var(--text-sub);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-title-area" onclick="app.goHome()">
+        <h1>やさしい薬局SNSナビ</h1>
+        <div class="header-sub">選択するだけで、安心できる投稿文に。</div>
+    </div>
+    <div class="header-actions">
+        <button class="header-icon-btn" onclick="app.toggleModal('helpModal', true)" aria-label="使い方">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
+        </button>
+        <button class="header-icon-btn" onclick="app.toggleModal('settingsModal', true)" aria-label="設定">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.58 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </button>
+    </div>
+</header>
+
+<div class="container">
+    
+    <!-- Input Section -->
+    <div class="section" id="inputSection">
+        
+        <!-- 1. Situation -->
+        <div class="section-title">1. 今日の状況（複数可）</div>
+        <div class="select-grid" id="situationGrid">
+            <!-- JS will populate -->
+        </div>
+
+        <!-- 2. Tone -->
+        <div class="section-title">2. 今日のトーン</div>
+        <div class="select-grid triple" id="toneGrid">
+            <div class="select-item active" data-value="kind">やさしく<br>寄り添う</div>
+            <div class="select-item" data-value="bright">明るく<br>前向き</div>
+            <div class="select-item" data-value="calm">落ち着いて<br>安心</div>
+        </div>
+
+        <!-- 3. Photo Type -->
+        <div class="section-title">3. 写真の種類（文脈に反映）</div>
+        <div class="select-grid triple" id="photoGrid">
+            <div class="select-item active" data-value="entrance">入口/看板</div>
+            <div class="select-item" data-value="waiting">待合室</div>
+            <div class="select-item" data-value="staff">スタッフ</div>
+            <div class="select-item" data-value="info">お知らせ</div>
+            <div class="select-item" data-value="season">季節飾り</div>
+            <div class="select-item" data-value="item">商品/機器</div>
+        </div>
+
+        <!-- 4. Purpose -->
+        <div class="section-title">4. 伝えたい目的</div>
+        <div class="select-grid" id="purposeGrid">
+            <div class="select-item active" data-value="consult">相談しやすさ</div>
+            <div class="select-item" data-value="local">地域密着</div>
+            <div class="select-item" data-value="clean">清潔感・安心</div>
+            <div class="select-item" data-value="explain">丁寧な説明</div>
+        </div>
+
+        <!-- Text Inputs -->
+        <div class="card" style="margin-top: 20px;">
+            <!-- Logo Display Area (Hidden if no logo) -->
+            <div id="mainLogoDisplay" style="display:none; justify-content:center; margin-bottom:12px;">
+                <img src="" alt="Logo" style="max-height: 80px; max-width: 100%; object-fit:contain;">
+            </div>
+
+            <div class="input-group">
+                <label>薬局名（一時変更）</label>
+                <input type="text" id="pharmacyName" placeholder="設定画面で保存できます">
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+                <label>ひとこと自由メモ（任意・最大200文字）</label>
+                <textarea id="freeMemo" maxlength="200" placeholder="例：今日は雨ですが、温かいお茶をご用意しています。"></textarea>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="btn-area">
+            <button class="btn btn-primary" onclick="app.generate()">
+                <svg class="icon" viewBox="0 0 24 24" style="margin-right:8px;"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                文を作る
+            </button>
+        </div>
+    </div>
+
+    <!-- Output Section -->
+    <div class="section" id="outputSection">
+        <div class="section-title">作成結果</div>
+        
+        <!-- Platform Tabs -->
+        <div class="tabs">
+            <div class="tab active" onclick="app.switchTab('instagram')">Instagram</div>
+            <div class="tab" onclick="app.switchTab('facebook')">Facebook</div>
+            <div class="tab" onclick="app.switchTab('x')">X (Twitter)</div>
+            <div class="tab" onclick="app.switchTab('line')">LINE</div>
+        </div>
+
+        <!-- NG Check Alert -->
+        <div id="ngAlertBox" class="ng-alert-box">
+            <div class="ng-title">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                表現の注意点が見つかりました
+            </div>
+            <ul class="ng-list" id="ngList"></ul>
+        </div>
+
+        <!-- Variation Select -->
+        <div class="variation-selector">
+            <button class="var-btn active" onclick="app.selectVariation(0)">候補1</button>
+            <button class="var-btn" onclick="app.selectVariation(1)">候補2</button>
+            <button class="var-btn" onclick="app.selectVariation(2)">候補3</button>
+        </div>
+
+        <!-- Result Text Area -->
+        <div class="result-box" id="resultBox">ここに生成された文章が表示されます。</div>
+
+        <!-- CTA Selection -->
+        <div class="card">
+            <label style="margin-bottom:10px;">最後に添える一言（CTA）</label>
+            <div class="cta-options" id="ctaOptions">
+                <!-- JS Populated -->
+            </div>
+        </div>
+
+        <button class="btn btn-copy" onclick="app.copyToClipboard()">
+            <svg class="icon" viewBox="0 0 24 24" style="margin-right:8px;"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            クリップボードにコピー
+        </button>
+
+        <button class="btn btn-secondary" style="margin-top:16px;" onclick="app.backToEdit()">入力を修正する</button>
+    </div>
+
+    <footer>
+        <div>制作/監修：SPC</div>
+        <div style="font-size: 0.7rem; margin-top: 4px; opacity: 0.8;">テスト版利用：20260131まで</div>
+        <a href="https://www.smileplusctg.com/contact" target="_blank" class="footer-link">お問い合わせ</a>
+    </footer>
+
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="modal-overlay" onclick="app.toggleModal('helpModal', false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-modal" onclick="app.toggleModal('helpModal', false)">&times;</button>
+        <h3 class="section-title" style="margin-top:0;">使い方ガイド</h3>
+        
+        <div style="margin-bottom:20px;">
+            <strong style="color:var(--primary);">🎯 目的</strong>
+            <p style="font-size:0.9rem; color:var(--text-sub);">忙しい業務の合間に、薬機法を配慮した「やさしい」SNS投稿を30秒で作成します。</p>
+        </div>
+
+        <div>
+            <strong style="color:var(--primary);">🚀 3ステップ作成</strong>
+            <ul style="padding-left:20px; font-size:0.9rem; color:var(--text-main);">
+                <li style="margin-bottom:8px;"><strong>1. 選択する</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">天候や相談内容など、今日の状況を選びます。</span></li>
+                <li style="margin-bottom:8px;"><strong>2. メモする（任意）</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">伝えたいことがあれば少し書き足します。</span></li>
+                <li><strong>3. 作成ボタン</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">AI風のロジックが3パターンの文章を生成します。</span></li>
+            </ul>
+        </div>
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="app.toggleModal('helpModal', false)">閉じる</button>
+        </div>
+    </div>
+</div>
+
+<!-- Reset Confirm Modal (Custom) -->
+<div id="resetConfirmModal" class="modal-overlay" onclick="app.toggleModal('resetConfirmModal', false)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="text-align: center;">
+        <h3 class="section-title" style="margin-top:0; color:var(--danger); justify-content:center;">データの削除</h3>
+        <p style="font-size:0.9rem; margin: 20px 0;">
+            入力した薬局名や設定、保存データを<br>すべて削除して初期状態に戻しますか？<br><br>
+            <span style="font-size:0.8rem; color:var(--text-sub);">※この操作は取り消せません。</span>
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button class="btn btn-secondary" onclick="app.toggleModal('resetConfirmModal', false)">キャンセル</button>
+            <button class="btn btn-danger" onclick="app.execReset()">全て削除する</button>
+        </div>
+    </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settingsModal" class="modal-overlay" onclick="app.toggleModal('settingsModal', false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <button class="close-modal" onclick="app.toggleModal('settingsModal', false)">&times;</button>
+        <h3 class="section-title" style="margin-top:0;">設定</h3>
+
+        <div class="input-group">
+            <label>画面の配色</label>
+            <button class="btn btn-secondary" id="themeToggleBtn" onclick="app.toggleTheme()" style="width:auto; padding:8px 16px;">ダークモードに切替</button>
+        </div>
+        
+        <div style="border-top:1px solid var(--border); margin:20px 0;"></div>
+        
+        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:12px;">以下を設定しておくと、毎回入力する手間が省け、署名も自動作成されます。</p>
+
+        <!-- Logo Setting -->
+        <div class="input-group">
+            <label>店舗ロゴ</label>
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <div class="logo-preview-box" id="logoPreview">
+                    <span class="logo-placeholder">No<br>Img</span>
+                </div>
+                <div style="flex:1;">
+                    <input type="file" id="logoInput" accept="image/*" style="font-size: 0.8rem; padding: 8px;">
+                    <p style="font-size: 0.7rem; color: var(--text-sub); margin: 4px 0 0 0; opacity:0.8;">
+                        ※推奨: 400x400px (正方形) 2MB以下<br>
+                        ※ロゴは端末内にのみ保存されます
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>薬局名</label>
+            <input type="text" id="settingName" placeholder="例：ひまわり薬局">
+        </div>
+        <div class="input-group">
+            <label>地区（市区町村など）</label>
+            <input type="text" id="settingArea" placeholder="例：〇〇区、〇〇市">
+        </div>
+        <div class="input-group">
+            <label>ホームページURL</label>
+            <input type="url" id="settingHp" placeholder="https://...">
+        </div>
+
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn btn-primary" onclick="app.saveSettings()">保存して閉じる</button>
+        </div>
+
+        <!-- Demo Data Utils (Bottom of Settings) -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px dashed var(--border);">
+            <p style="font-size: 0.75rem; color: var(--text-sub); text-align: center; margin-bottom: 10px;">デモ・テスト用機能</p>
+            <div style="display: flex; justify-content: center; gap: 10px;">
+                <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 16px; width:auto;" onclick="app.loadDemoData()">デモデータを入力</button>
+                <button class="btn btn-secondary" style="font-size: 0.8rem; padding: 8px 16px; width:auto; color: var(--danger); border-color: var(--danger);" onclick="app.confirmReset()">デモデータを削除</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Application Logic
+ */
+const app = {
+    // Data Definitions
+    data: {
+        situations: [
+            { id: 'rain', label: '雨で来局少なめ', text: '足元の悪い中、ご来局ありがとうございます。' },
+            { id: 'pollen', label: '花粉症の相談多', text: '今日は花粉症のご相談が増えています。' },
+            { id: 'cough', label: '咳・のどの相談多', text: '喉の痛みや咳でお困りの方が増えています。' },
+            { id: 'stomach', label: '胃腸の相談多', text: '胃腸の不調を訴える方が多い一日です。' },
+            { id: 'newlife', label: '新生活の相談', text: '新生活、お薬の飲み忘れなどありませんか？' },
+            { id: 'senior', label: '高齢の方が多い', text: '今日はご年配の方に多くご利用いただいています。' },
+            { id: 'homecare', label: '在宅の相談あり', text: '在宅訪問についてのご相談を承りました。' },
+            { id: 'expiry', label: '期限の質問多', text: '処方箋の有効期限についてご質問を頂きました。' },
+            { id: 'generic', label: 'ジェネリック相談', text: 'ジェネリック医薬品への変更相談が増えています。' },
+            { id: 'wait', label: '待ち時間質問', text: '待ち時間の過ごし方についてご案内しました。' }
+        ],
+        ctas: [
+            '気になることはお気軽にご相談ください。',
+            'お薬の飲み方で迷ったらお声がけください。',
+            '処方箋の期限や受付時間もご案内します。',
+            '在宅訪問のご相談も承ります。',
+            '待ち時間のことも遠慮なくどうぞ。'
+        ],
+        ngWords: [
+            { word: '治る', replace: '快方に向かう', level: 'error' },
+            { word: '必ず', replace: '努めます', level: 'warning' },
+            { word: '絶対', replace: '大切に', level: 'warning' },
+            { word: '効果がある', replace: '期待できる', level: 'error' },
+            { word: '効きます', replace: '良い方向へ', level: 'error' },
+            { word: '完治', replace: '改善', level: 'error' },
+            { word: '副作用なし', replace: 'お体に合うか確認', level: 'error' },
+            { word: '100%', replace: '最大限', level: 'warning' },
+            { word: '最安', replace: 'お求めやすい', level: 'error' },
+            { word: '日本一', replace: '地域一番を目指す', level: 'error' },
+            { word: 'この薬が効く', replace: 'このお薬が合っているかもしれません', level: 'error' },
+            { word: '診断', replace: '確認', level: 'error' },
+            { word: '処方します', replace: 'ご用意します', level: 'warning' }
+        ]
+    },
+
+    // State
+    state: {
+        selectedSituations: [],
+        tone: 'kind',
+        photo: 'entrance',
+        purpose: 'consult',
+        pharmacyName: '',
+        area: '',
+        hp: '',
+        logoData: '', // Base64 string
+        freeMemo: '',
+        currentPlatform: 'instagram',
+        generatedVariations: [], 
+        selectedVariationIndex: 0,
+        selectedCta: '',
+        isDarkMode: false
+    },
+
+    // Initialization
+    init() {
+        this.renderSituations();
+        this.setupSelects('toneGrid', 'tone', false);
+        this.setupSelects('photoGrid', 'photo', false);
+        this.setupSelects('purposeGrid', 'purpose', false);
+        this.renderCtas();
+        this.loadSettings();
+        
+        // Logo Input Listener
+        document.getElementById('logoInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (file.size > 2 * 1024 * 1024) { // 2MB limit check
+                    alert('画像サイズが大きすぎます(2MB以下推奨)。\n保存できない可能性があります。');
+                }
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    this.state.logoData = evt.target.result;
+                    this.updateLogoPreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    },
+
+    renderSituations() {
+        const grid = document.getElementById('situationGrid');
+        grid.innerHTML = this.data.situations.map(s => `
+            <div class="select-item" data-id="${s.id}" onclick="app.toggleSituation(this, '${s.id}')">
+                ${s.label}
+            </div>
+        `).join('');
+    },
+
+    renderCtas() {
+        const container = document.getElementById('ctaOptions');
+        this.state.selectedCta = this.data.ctas[0];
+        container.innerHTML = this.data.ctas.map((cta, index) => `
+            <label>
+                <input type="radio" name="cta" value="${cta}" ${index === 0 ? 'checked' : ''} onchange="app.updateCta(this.value)">
+                ${cta}
+            </label>
+        `).join('');
+    },
+
+    setupSelects(id, stateKey, isMulti) {
+        const container = document.getElementById(id);
+        const items = container.querySelectorAll('.select-item');
+        items.forEach(item => {
+            item.addEventListener('click', () => {
+                items.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                this.state[stateKey] = item.dataset.value;
+            });
+        });
+    },
+
+    updateSelectGrid(id, value) {
+        const container = document.getElementById(id);
+        if(!container) return;
+        const items = container.querySelectorAll('.select-item');
+        items.forEach(item => {
+            item.classList.remove('active');
+            if(item.dataset.value === value) item.classList.add('active');
+        });
+    },
+
+    toggleSituation(el, id) {
+        el.classList.toggle('active');
+        const index = this.state.selectedSituations.indexOf(id);
+        if (index > -1) {
+            this.state.selectedSituations.splice(index, 1);
+        } else {
+            this.state.selectedSituations.push(id);
+        }
+    },
+
+    updateCta(value) {
+        this.state.selectedCta = value;
+        this.updateResultView();
+    },
+
+    // Modal Logic
+    toggleModal(modalId, show) {
+        const modal = document.getElementById(modalId);
+        if (show) {
+            modal.classList.add('show');
+            if (modalId === 'settingsModal') {
+                // Pre-fill settings inputs
+                document.getElementById('settingName').value = this.state.pharmacyName || '';
+                document.getElementById('settingArea').value = this.state.area || '';
+                document.getElementById('settingHp').value = this.state.hp || '';
+                this.updateLogoPreview(); // Ensure preview is up to date
+            }
+        } else {
+            modal.classList.remove('show');
+        }
+    },
+
+    // Theme Logic
+    toggleTheme() {
+        this.state.isDarkMode = !this.state.isDarkMode;
+        document.body.classList.toggle('dark-mode', this.state.isDarkMode);
+        const btn = document.getElementById('themeToggleBtn');
+        btn.innerText = this.state.isDarkMode ? 'ライトモードに切替' : 'ダークモードに切替';
+    },
+
+    // Settings Logic
+    saveSettings(silent = false) {
+        // Get values from modal
+        this.state.pharmacyName = document.getElementById('settingName').value.trim();
+        this.state.area = document.getElementById('settingArea').value.trim();
+        this.state.hp = document.getElementById('settingHp').value.trim();
+
+        // Update main input placeholder/value & Logo
+        this.updateMainInput();
+        this.updateMainLogo();
+
+        // Save to LS
+        const settings = {
+            name: this.state.pharmacyName,
+            area: this.state.area,
+            hp: this.state.hp,
+            dark: this.state.isDarkMode,
+            logo: this.state.logoData
+        };
+        try {
+            localStorage.setItem('spc_pharmacy_settings', JSON.stringify(settings));
+            if(!silent) {
+                this.toggleModal('settingsModal', false);
+                alert('設定を保存しました');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('保存に失敗しました。画像サイズが大きすぎる可能性があります。');
+        }
+    },
+
+    loadSettings() {
+        const saved = localStorage.getItem('spc_pharmacy_settings');
+        if (saved) {
+            try {
+                const s = JSON.parse(saved);
+                this.state.pharmacyName = s.name || '';
+                this.state.area = s.area || '';
+                this.state.hp = s.hp || '';
+                this.state.isDarkMode = !!s.dark;
+                this.state.logoData = s.logo || '';
+                
+                if (this.state.isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                    document.getElementById('themeToggleBtn').innerText = 'ライトモードに切替';
+                }
+            } catch(e) {
+                console.error("Load error", e);
+            }
+        }
+        this.updateMainInput();
+        this.updateMainLogo();
+    },
+
+    updateMainInput() {
+        const mainInput = document.getElementById('pharmacyName');
+        if (this.state.pharmacyName) {
+            mainInput.value = this.state.pharmacyName;
+        }
+    },
+
+    updateLogoPreview() {
+        const box = document.getElementById('logoPreview');
+        if (this.state.logoData) {
+            box.innerHTML = `<img src="${this.state.logoData}" alt="Logo Preview">`;
+        } else {
+            box.innerHTML = `<span class="logo-placeholder">No<br>Img</span>`;
+        }
+    },
+
+    updateMainLogo() {
+        const display = document.getElementById('mainLogoDisplay');
+        const img = display.querySelector('img');
+        if (this.state.logoData) {
+            img.src = this.state.logoData;
+            display.style.display = 'flex';
+        } else {
+            display.style.display = 'none';
+        }
+    },
+
+    // Demo Data Logic (Improved)
+    loadDemoData() {
+        try {
+            // 1. データセット
+            this.state.pharmacyName = 'ひまわり薬局';
+            this.state.area = '世田谷区';
+            this.state.hp = 'https://www.himawari.com/'; // URL変更
+            this.state.freeMemo = '今日は足元が滑りやすくなっているのでお気をつけて。';
+            this.state.selectedSituations = ['rain', 'senior'];
+            this.state.tone = 'kind';
+            this.state.photo = 'entrance';
+            
+            // 2. UIへの反映（入力フォーム）
+            const setVal = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.value = val;
+            };
+            setVal('settingName', this.state.pharmacyName);
+            setVal('settingArea', this.state.area);
+            setVal('settingHp', this.state.hp);
+            setVal('pharmacyName', this.state.pharmacyName);
+            setVal('freeMemo', this.state.freeMemo);
+
+            // 3. UIへの反映（選択グリッド）
+            // 状況
+            const sGrid = document.getElementById('situationGrid');
+            if (sGrid) {
+                Array.from(sGrid.children).forEach(el => {
+                    const id = el.dataset.id; // data-id属性を使用
+                    if (this.state.selectedSituations.includes(id)) {
+                        el.classList.add('active');
+                    } else {
+                        el.classList.remove('active');
+                    }
+                });
+            }
+            
+            // トーン
+            this.updateSelectGrid('toneGrid', this.state.tone);
+            // 写真
+            this.updateSelectGrid('photoGrid', this.state.photo);
+
+            // 4. 保存
+            this.saveSettings(true); // silent save
+
+            // 5. モーダルを閉じて通知
+            this.toggleModal('settingsModal', false);
+            window.scrollTo(0, 0);
+            
+            // 少し遅らせてアラート（UI描画を優先させるため）
+            setTimeout(() => {
+                alert('デモデータを入力しました！\n「文を作る」ボタンを押して試してみてください。');
+            }, 100);
+            
+        } catch (e) {
+            console.error(e);
+            alert('エラーが発生しました: ' + e.message);
+        }
+    },
+
+    // リセット確認モーダルを表示
+    confirmReset() {
+        this.toggleModal('settingsModal', false);
+        this.toggleModal('resetConfirmModal', true);
+    },
+
+    // 実際にリセットを実行（DOM操作による完全初期化）
+    execReset() {
+        try {
+            // 1. ローカルストレージ削除
+            localStorage.removeItem('spc_pharmacy_settings');
+            localStorage.removeItem('spc_pharmacy_sns_data');
+            
+            // 2. 内部状態の初期化
+            this.state.pharmacyName = '';
+            this.state.area = '';
+            this.state.hp = '';
+            this.state.logoData = '';
+            this.state.freeMemo = '';
+            this.state.selectedSituations = [];
+            this.state.tone = 'kind';
+            this.state.photo = 'entrance';
+            this.state.purpose = 'consult';
+            this.state.isDarkMode = false;
+
+            // 3. 入力フォームのクリア (DOM直接操作)
+            const inputs = document.querySelectorAll('input[type="text"], input[type="url"], textarea, input[type="file"]');
+            inputs.forEach(input => input.value = '');
+
+            // 4. ロゴ表示のリセット
+            this.updateLogoPreview();
+            this.updateMainLogo();
+
+            // 5. 選択グリッドのリセット (Visual)
+            // Situation: 全て非アクティブに
+            const sGrid = document.getElementById('situationGrid');
+            if (sGrid) {
+                Array.from(sGrid.children).forEach(el => el.classList.remove('active'));
+            }
+            // 他のグリッド: 初期値に戻す
+            this.updateSelectGrid('toneGrid', 'kind');
+            this.updateSelectGrid('photoGrid', 'entrance');
+            this.updateSelectGrid('purposeGrid', 'consult');
+
+            // 6. ダークモード解除
+            document.body.classList.remove('dark-mode');
+            const themeBtn = document.getElementById('themeToggleBtn');
+            if(themeBtn) themeBtn.innerText = 'ダークモードに切替';
+
+            // 7. 画面状態リセット
+            document.getElementById('resultBox').innerText = 'ここに生成された文章が表示されます。';
+            this.backToEdit();
+            
+            // モーダル閉じる
+            this.toggleModal('resetConfirmModal', false);
+            
+            // スクロールトップ
+            window.scrollTo(0, 0);
+            
+            alert('データを削除しました。');
+            
+        } catch (e) {
+            console.error(e);
+            alert('削除中にエラーが発生しました');
+        }
+    },
+
+    goHome() {
+        this.backToEdit();
+        window.scrollTo(0, 0);
+    },
+
+    // Generation Logic
+    generate() {
+        // Collect Inputs (Main input overrides setting if changed)
+        const inputName = document.getElementById('pharmacyName').value.trim();
+        this.state.pharmacyName = inputName || this.state.pharmacyName || '当薬局';
+        this.state.freeMemo = document.getElementById('freeMemo').value;
+
+        // Build Content Components
+        const name = this.state.pharmacyName;
+        
+        // 1. Situation Text
+        let situationText = "";
+        if (this.state.selectedSituations.length > 0) {
+            situationText = this.state.selectedSituations.map(id => {
+                return this.data.situations.find(s => s.id === id).text;
+            }).join(' ');
+        } else {
+            situationText = "今日も元気に開局しております。";
+        }
+
+        // 2. Photo Context
+        let photoText = "";
+        const photoMap = {
+            entrance: `写真は${name}の入り口です。`,
+            waiting: `待合室は換気と消毒を徹底しています。`,
+            staff: `私たちスタッフが対応いたします。`,
+            info: `薬局内のお知らせを更新しました。`,
+            season: `季節の飾り付けをしてみました。`,
+            item: `おすすめのケア用品のご紹介です。`
+        };
+        photoText = photoMap[this.state.photo] || "";
+
+        // 3. Generate Variations
+        const tone = this.state.tone;
+        const memo = this.state.freeMemo;
+        this.state.generatedVariations = this.createVariations(situationText, photoText, memo, tone);
+        
+        // Show UI
+        document.getElementById('inputSection').style.display = 'none';
+        document.getElementById('outputSection').style.display = 'block';
+        window.scrollTo(0,0);
+        
+        // Default View
+        this.state.selectedVariationIndex = 0;
+        this.updateVariationButtons();
+        this.updateResultView();
+        
+        // Run Checks
+        this.runNgCheck();
+    },
+
+    createVariations(sit, photo, memo, tone) {
+        let areaStr = this.state.area ? `${this.state.area}の` : '';
+
+        // V1: Standard
+        let v1 = `${areaStr}${this.state.pharmacyName}です。\n${sit}\n${photo}\n${memo ? '\n' + memo : ''}\n\n皆様の健康をサポートできるよう準備しております。`;
+
+        // V2: Soft
+        let v2 = `こんにちは、${areaStr}${this.state.pharmacyName}です。\n${sit}\n\n${memo ? memo + '\n\n' : ''}${photo} 少しでもホッとしていただければ嬉しいです。`;
+
+        // V3: Short/Professional
+        let v3 = `【${this.state.pharmacyName}より】\n${sit}\n${memo ? memo : ''}\n${photo}\n${this.state.area ? this.state.area + 'で' : ''}丁寧にサポートいたします。`;
+
+        if (tone === 'bright') {
+            v1 += "✨";
+            v2 = "こんにちは！☀️\n" + v2 + "💪";
+        } else if (tone === 'calm') {
+            v2 = v2.replace('嬉しいです', '幸いです');
+        }
+
+        return [v1, v2, v3];
+    },
+
+    formatForPlatform(text, platform) {
+        const cta = this.state.selectedCta;
+        const name = this.state.pharmacyName;
+        const area = this.state.area;
+        const hp = this.state.hp;
+
+        // Signature Builder
+        let signature = ``;
+        if (platform === 'facebook' || platform === 'line') {
+            signature += `\n\n---\n${name}`;
+            if (area) signature += `\n${area}`;
+            if (hp) signature += `\n${hp}`;
+        }
+
+        // Tags
+        const tags = {
+            instagram: `\n\n#${name} #調剤薬局 #健康相談 ${area ? '#'+area : ''} #薬剤師 #かかりつけ薬局`,
+            facebook: signature,
+            x: `\n#${name} #薬局`,
+            line: signature
+        };
+
+        let formatted = "";
+
+        if (platform === 'instagram') {
+            formatted = text.replace(/\n/g, '\n\n') + `\n\n👇\n${cta}` + tags.instagram;
+        } else if (platform === 'facebook') {
+            formatted = text + `\n\n${cta}` + tags.facebook;
+        } else if (platform === 'x') {
+            formatted = text + `\n${cta}` + tags.x;
+            if (hp) formatted += `\n${hp}`;
+        } else if (platform === 'line') {
+            formatted = `【${name}】\n\n` + text + `\n\n----------------\n${cta}` + tags.line;
+        }
+
+        return formatted;
+    },
+
+    // UI Updates
+    switchTab(platform) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        this.state.currentPlatform = platform;
+        this.updateResultView();
+    },
+
+    selectVariation(index) {
+        this.state.selectedVariationIndex = index;
+        this.updateVariationButtons();
+        this.updateResultView();
+        this.runNgCheck();
+    },
+
+    updateVariationButtons() {
+        document.querySelectorAll('.var-btn').forEach((b, i) => {
+            if (i === this.state.selectedVariationIndex) b.classList.add('active');
+            else b.classList.remove('active');
+        });
+    },
+
+    updateResultView() {
+        const rawText = this.state.generatedVariations[this.state.selectedVariationIndex];
+        const formatted = this.formatForPlatform(rawText, this.state.currentPlatform);
+        document.getElementById('resultBox').innerText = formatted;
+    },
+
+    backToEdit() {
+        document.getElementById('outputSection').style.display = 'none';
+        document.getElementById('inputSection').style.display = 'block';
+        window.scrollTo(0,0);
+    },
+
+    // NG Check
+    runNgCheck() {
+        const text = document.getElementById('resultBox').innerText;
+        const alertBox = document.getElementById('ngAlertBox');
+        const list = document.getElementById('ngList');
+        list.innerHTML = '';
+        
+        let found = false;
+
+        this.data.ngWords.forEach(ng => {
+            if (text.includes(ng.word)) {
+                found = true;
+                const li = document.createElement('li');
+                li.className = 'ng-item';
+                li.innerHTML = `
+                    <div>
+                        <span class="ng-word">${ng.word}</span>
+                        → <span class="safe-word">${ng.replace}</span>
+                    </div>
+                    <button class="btn-fix" onclick="app.replaceText('${ng.word}', '${ng.replace}')">修正</button>
+                `;
+                list.appendChild(li);
+            }
+        });
+
+        if (found) {
+            alertBox.style.display = 'block';
+        } else {
+            alertBox.style.display = 'none';
+        }
+    },
+
+    replaceText(oldWord, newWord) {
+        const box = document.getElementById('resultBox');
+        box.innerText = box.innerText.replace(new RegExp(oldWord, 'g'), newWord);
+        this.runNgCheck(); 
+    },
+
+    // Fixed copyToClipboard
+    copyToClipboard() {
+        const text = document.getElementById('resultBox').innerText;
+        
+        // フォールバック処理：textareaを作成してコピー
+        const copyFallback = (str) => {
+            const textarea = document.createElement('textarea');
+            textarea.value = str;
+            // 画面外に配置して見えないようにする
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            textarea.style.top = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('コピーしました！');
+                } else {
+                    alert('コピーに失敗しました。');
+                }
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+                alert('コピーできませんでした。手動でコピーしてください。');
+            }
+            
+            document.body.removeChild(textarea);
+        };
+
+        // 基本的にフォールバックを使用（互換性のため）
+        copyFallback(text);
+    }
+};
+
+window.onload = function() {
+    app.init();
+};
+</script>
+</body>
+</html>
