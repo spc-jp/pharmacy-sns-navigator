@@ -123,13 +123,20 @@
             padding: 16px;
         }
 
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0 12px 0;
+        }
+
         .section-title {
             font-size: 1rem;
             font-weight: bold;
-            margin: 20px 0 12px 0;
             display: flex;
             align-items: center;
             color: var(--primary);
+            margin: 0;
         }
 
         .section-title::before {
@@ -140,6 +147,21 @@
             background: var(--primary);
             margin-right: 8px;
             border-radius: 2px;
+        }
+
+        /* Month Selector */
+        .month-select {
+            font-size: 0.85rem;
+            padding: 4px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-main);
+            cursor: pointer;
+            outline: none;
+        }
+        .month-select:focus {
+            border-color: var(--primary);
         }
 
         .card {
@@ -185,6 +207,13 @@
             color: var(--primary);
             font-weight: bold;
             box-shadow: 0 0 0 2px var(--primary) inset;
+        }
+
+        .select-item .sub-text {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 4px;
+            font-weight: normal;
         }
 
         /* Forms */
@@ -541,8 +570,13 @@
     <!-- Input Section -->
     <div class="section" id="inputSection">
         
-        <!-- 1. Situation -->
-        <div class="section-title">1. 今日の状況（複数可）</div>
+        <!-- 1. Situation (with Month Selector) -->
+        <div class="section-header">
+            <div class="section-title">1. 今日の状況</div>
+            <select id="monthSelector" class="month-select" onchange="app.changeMonth(this.value)">
+                <!-- JS Populated -->
+            </select>
+        </div>
         <div class="select-grid" id="situationGrid">
             <!-- JS will populate -->
         </div>
@@ -670,7 +704,7 @@
         <div>
             <strong style="color:var(--primary);">🚀 3ステップ作成</strong>
             <ul style="padding-left:20px; font-size:0.9rem; color:var(--text-main);">
-                <li style="margin-bottom:8px;"><strong>1. 選択する</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">天候や相談内容など、今日の状況を選びます。</span></li>
+                <li style="margin-bottom:8px;"><strong>1. 選択する</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">月を選んで、今日の状況をクリックします。</span></li>
                 <li style="margin-bottom:8px;"><strong>2. メモする（任意）</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">伝えたいことがあれば少し書き足します。</span></li>
                 <li><strong>3. 作成ボタン</strong><br><span style="font-size:0.8rem; color:var(--text-sub);">AI風のロジックが3パターンの文章を生成します。</span></li>
             </ul>
@@ -770,18 +804,79 @@
 const app = {
     // Data Definitions
     data: {
-        situations: [
-            { id: 'rain', label: '雨で来局少なめ', text: '足元の悪い中、ご来局ありがとうございます。' },
-            { id: 'pollen', label: '花粉症の相談多', text: '今日は花粉症のご相談が増えています。' },
-            { id: 'cough', label: '咳・のどの相談多', text: '喉の痛みや咳でお困りの方が増えています。' },
-            { id: 'stomach', label: '胃腸の相談多', text: '胃腸の不調を訴える方が多い一日です。' },
-            { id: 'newlife', label: '新生活の相談', text: '新生活、お薬の飲み忘れなどありませんか？' },
-            { id: 'senior', label: '高齢の方が多い', text: '今日はご年配の方に多くご利用いただいています。' },
-            { id: 'homecare', label: '在宅の相談あり', text: '在宅訪問についてのご相談を承りました。' },
-            { id: 'expiry', label: '期限の質問多', text: '処方箋の有効期限についてご質問を頂きました。' },
-            { id: 'generic', label: 'ジェネリック相談', text: 'ジェネリック医薬品への変更相談が増えています。' },
-            { id: 'wait', label: '待ち時間質問', text: '待ち時間の過ごし方についてご案内しました。' }
+        // Common situations available every month
+        commonSituations: [
+            { id: 'rain', label: '雨・足元注意', text: '足元の悪い中、ご来局ありがとうございます。' },
+            { id: 'wait', label: '待ち時間', text: 'お待たせして申し訳ありません。' },
+            { id: 'senior', label: '高齢の方へ', text: '今日はご年配の方に多くご利用いただいています。' },
+            { id: 'homecare', label: '在宅相談', text: '在宅訪問についてのご相談を承りました。' },
+            { id: 'expiry', label: '期限の質問', text: '処方箋の有効期限についてご質問を頂きました。' },
+            { id: 'generic', label: 'ジェネリック', text: 'ジェネリック医薬品への変更相談が増えています。' }
         ],
+        // Monthly seasonal situations
+        monthlySituations: {
+            1: [
+                { id: 'newyear', label: '新年の挨拶', text: 'あけましておめでとうございます。本年もよろしくお願いいたします。' },
+                { id: 'adult', label: '成人の日', text: '新成人の皆様、おめでとうございます。' },
+                { id: 'dryskin', label: '乾燥肌対策', text: '空気が乾燥していますね。保湿ケアのご相談もお気軽に。' },
+                { id: 'exam', label: '受験生応援', text: '受験生の皆さん、体調管理は万全ですか？' }
+            ],
+            2: [
+                { id: 'pollen_start', label: '花粉飛び始め', text: 'そろそろ花粉を感じる方が増えてきました。' },
+                { id: 'heart', label: 'ヒートショック', text: '寒暖差によるヒートショックにご注意ください。' },
+                { id: 'dry', label: 'お肌の乾燥', text: 'まだまだ乾燥が続きます。ハンドクリーム等のご相談もどうぞ。' }
+            ],
+            3: [
+                { id: 'pollen_peak', label: '花粉ピーク', text: '花粉症がつらい時期ですね。点眼・点鼻薬のご相談もお待ちしています。' },
+                { id: 'grad', label: '卒業シーズン', text: '卒業生の皆様、おめでとうございます。新生活の準備はお済みですか？' },
+                { id: 'stress', label: '春のストレス', text: '季節の変わり目、自律神経の乱れにご注意ください。' }
+            ],
+            4: [
+                { id: 'newlife', label: '新生活', text: '新生活、環境の変化で体調を崩されていませんか？' },
+                { id: 'checkup', label: '健康診断', text: '健康診断の結果についてのご相談も承っております。' },
+                { id: 'maternity', label: 'お薬手帳', text: '新年度、お薬手帳を新しくしませんか？' }
+            ],
+            5: [
+                { id: 'gwe', label: 'GW明け', text: '連休明け、無理せずリズムを整えていきましょう。' },
+                { id: 'uv', label: '紫外線対策', text: '紫外線が強くなってきました。UVケアのご準備を。' },
+                { id: 'tired', label: '五月病かも', text: 'なんとなくダルい...そんな時もお気軽にお声がけください。' }
+            ],
+            6: [
+                { id: 'rainy', label: '梅雨入り', text: '梅雨入りしましたね。気圧の変化による頭痛などありませんか？' },
+                { id: 'food', label: '食中毒注意', text: 'ジメジメした時期は食中毒にご注意ください。' },
+                { id: 'mold', label: 'カビ対策', text: '湿気対策をして、快適に過ごしましょう。' }
+            ],
+            7: [
+                { id: 'heat', label: '熱中症警戒', text: '暑さが厳しくなってきました。こまめな水分補給を忘れずに。' },
+                { id: 'ac', label: '冷房病', text: '冷房による冷えすぎにご注意ください。' },
+                { id: 'dehydrate', label: '脱水予防', text: '喉が渇く前に水分を摂ることが大切です。' }
+            ],
+            8: [
+                { id: 'summer', label: '夏本番', text: '毎日暑いですね。無理せず涼しい場所でお過ごしください。' },
+                { id: 'obon', label: 'お盆休み', text: '帰省中の方も、お薬の飲み忘れにご注意ください。' },
+                { id: 'exhaust', label: '夏バテ', text: '食欲がない時は、消化の良いものを心がけましょう。' }
+            ],
+            9: [
+                { id: 'typhoon', label: '台風・気圧', text: '台風の接近に伴う気圧の変化にご注意ください。' },
+                { id: 'disaster', label: '防災の日', text: 'もしもの時の予備薬、確認されていますか？' },
+                { id: 'autumn_pollen', label: '秋の花粉', text: '秋の花粉症のご相談も増えています。' }
+            ],
+            10: [
+                { id: 'temp', label: '寒暖差', text: '朝晩の寒暖差で体調を崩しやすい時期です。' },
+                { id: 'eye', label: '目の愛護', text: '読書の秋、目の疲れを感じたらご相談ください。' },
+                { id: 'flu_yoyaku', label: 'インフル予約', text: 'インフルエンザワクチンの予約が始まっています。' }
+            ],
+            11: [
+                { id: 'cold', label: '風邪予防', text: '手洗い・うがいを徹底して風邪を予防しましょう。' },
+                { id: 'skin', label: '皮膚乾燥', text: '冬の乾燥肌トラブル、早めのケアが大切です。' },
+                { id: 'no_flu', label: '流行期前', text: '本格的な流行の前に、免疫力を高めましょう。' }
+            ],
+            12: [
+                { id: 'endyear', label: '年末年始', text: '年末年始の営業日をご確認ください。予備薬の確認もお早めに。' },
+                { id: 'clean', label: '大掃除', text: '大掃除のホコリによるアレルギーにご注意ください。' },
+                { id: 'moist', label: '徹底保湿', text: '寒さが本格化しています。暖かくしてお過ごしください。' }
+            ]
+        },
         ctas: [
             '気になることはお気軽にご相談ください。',
             'お薬の飲み方で迷ったらお声がけください。',
@@ -815,19 +910,25 @@ const app = {
         pharmacyName: '',
         area: '',
         hp: '',
-        mapUrl: '', // Added
-        logoData: '', // Base64 string
+        mapUrl: '', 
+        logoData: '', 
         freeMemo: '',
         currentPlatform: 'instagram',
         generatedVariations: [], 
         selectedVariationIndex: 0,
         selectedCta: '',
-        isDarkMode: false
+        isDarkMode: false,
+        currentMonth: 1 // Default
     },
 
     // Initialization
     init() {
-        this.renderSituations();
+        // Set current month
+        const today = new Date();
+        this.state.currentMonth = today.getMonth() + 1;
+
+        this.renderMonthSelector();
+        this.renderSituations(); // Will use currentMonth
         this.setupSelects('toneGrid', 'tone', false);
         this.setupSelects('photoGrid', 'photo', false);
         this.setupSelects('purposeGrid', 'purpose', false);
@@ -838,7 +939,7 @@ const app = {
         document.getElementById('logoInput').addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                if (file.size > 2 * 1024 * 1024) { // 2MB limit check
+                if (file.size > 2 * 1024 * 1024) { 
                     alert('画像サイズが大きすぎます(2MB以下推奨)。\n保存できない可能性があります。');
                 }
                 const reader = new FileReader();
@@ -851,13 +952,43 @@ const app = {
         });
     },
 
+    renderMonthSelector() {
+        const select = document.getElementById('monthSelector');
+        let html = '';
+        for(let i=1; i<=12; i++) {
+            const selected = i === this.state.currentMonth ? 'selected' : '';
+            html += `<option value="${i}" ${selected}>${i}月</option>`;
+        }
+        select.innerHTML = html;
+    },
+
+    changeMonth(val) {
+        this.state.currentMonth = parseInt(val);
+        // Clear selected situations when changing month to avoid confusion? 
+        // Or keep them? Let's keep them if they exist in common, remove if seasonal.
+        // For simplicity, let's just re-render.
+        this.renderSituations();
+    },
+
     renderSituations() {
         const grid = document.getElementById('situationGrid');
-        grid.innerHTML = this.data.situations.map(s => `
-            <div class="select-item" data-id="${s.id}" onclick="app.toggleSituation(this, '${s.id}')">
+        
+        // Combine Common + Monthly
+        const common = this.data.commonSituations;
+        const seasonal = this.data.monthlySituations[this.state.currentMonth] || [];
+        const all = [...seasonal, ...common];
+
+        grid.innerHTML = all.map(s => {
+            const isActive = this.state.selectedSituations.includes(s.id) ? 'active' : '';
+            // Add a sub-text for label if it's too short, or just use label
+            return `
+            <div class="select-item ${isActive}" data-id="${s.id}" onclick="app.toggleSituation(this, '${s.id}')">
                 ${s.label}
+                <div class="sub-text" style="font-size:0.6rem; margin-top:2px; opacity:0.7; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; max-width:100%;">
+                    ${s.text.substring(0, 10)}...
+                </div>
             </div>
-        `).join('');
+        `}).join('');
     },
 
     renderCtas() {
@@ -918,8 +1049,8 @@ const app = {
                 document.getElementById('settingName').value = this.state.pharmacyName || '';
                 document.getElementById('settingArea').value = this.state.area || '';
                 document.getElementById('settingHp').value = this.state.hp || '';
-                document.getElementById('settingMap').value = this.state.mapUrl || ''; // Added
-                this.updateLogoPreview(); // Ensure preview is up to date
+                document.getElementById('settingMap').value = this.state.mapUrl || '';
+                this.updateLogoPreview(); 
             }
         } else {
             modal.classList.remove('show');
@@ -940,7 +1071,7 @@ const app = {
         this.state.pharmacyName = document.getElementById('settingName').value.trim();
         this.state.area = document.getElementById('settingArea').value.trim();
         this.state.hp = document.getElementById('settingHp').value.trim();
-        this.state.mapUrl = document.getElementById('settingMap').value.trim(); // Added
+        this.state.mapUrl = document.getElementById('settingMap').value.trim();
 
         // Update main input placeholder/value & Logo
         this.updateMainInput();
@@ -951,7 +1082,7 @@ const app = {
             name: this.state.pharmacyName,
             area: this.state.area,
             hp: this.state.hp,
-            map: this.state.mapUrl, // Added
+            map: this.state.mapUrl,
             dark: this.state.isDarkMode,
             logo: this.state.logoData
         };
@@ -975,7 +1106,7 @@ const app = {
                 this.state.pharmacyName = s.name || '';
                 this.state.area = s.area || '';
                 this.state.hp = s.hp || '';
-                this.state.mapUrl = s.map || ''; // Added
+                this.state.mapUrl = s.map || '';
                 this.state.isDarkMode = !!s.dark;
                 this.state.logoData = s.logo || '';
                 
@@ -1018,16 +1149,17 @@ const app = {
         }
     },
 
-    // Demo Data Logic (Improved)
+    // Demo Data Logic
     loadDemoData() {
         try {
             // 1. データセット
             this.state.pharmacyName = 'ひまわり薬局';
             this.state.area = '世田谷区';
             this.state.hp = 'https://www.himawari.com/'; 
-            this.state.mapUrl = 'https://goo.gl/maps/demo'; // Added demo map
+            this.state.mapUrl = 'https://goo.gl/maps/demo';
             this.state.freeMemo = '今日は足元が滑りやすくなっているのでお気をつけて。';
-            this.state.selectedSituations = ['rain', 'senior'];
+            // Demo situations (mix of common and seasonal if available)
+            this.state.selectedSituations = ['rain']; 
             this.state.tone = 'kind';
             this.state.photo = 'entrance';
             
@@ -1039,20 +1171,21 @@ const app = {
             setVal('settingName', this.state.pharmacyName);
             setVal('settingArea', this.state.area);
             setVal('settingHp', this.state.hp);
-            setVal('settingMap', this.state.mapUrl); // Added
+            setVal('settingMap', this.state.mapUrl);
             setVal('pharmacyName', this.state.pharmacyName);
             setVal('freeMemo', this.state.freeMemo);
 
             // 3. UIへの反映（選択グリッド）
-            // 状況
+            // Re-render first to ensure items exist
+            this.renderSituations();
+            
+            // Highlight selected
             const sGrid = document.getElementById('situationGrid');
             if (sGrid) {
                 Array.from(sGrid.children).forEach(el => {
-                    const id = el.dataset.id; // data-id属性を使用
+                    const id = el.dataset.id;
                     if (this.state.selectedSituations.includes(id)) {
                         el.classList.add('active');
-                    } else {
-                        el.classList.remove('active');
                     }
                 });
             }
@@ -1069,7 +1202,6 @@ const app = {
             this.toggleModal('settingsModal', false);
             window.scrollTo(0, 0);
             
-            // 少し遅らせてアラート（UI描画を優先させるため）
             setTimeout(() => {
                 alert('デモデータを入力しました！\n「文を作る」ボタンを押して試してみてください。');
             }, 100);
@@ -1086,18 +1218,16 @@ const app = {
         this.toggleModal('resetConfirmModal', true);
     },
 
-    // 実際にリセットを実行（DOM操作による完全初期化）
+    // 実際にリセットを実行
     execReset() {
         try {
-            // 1. ローカルストレージ削除
             localStorage.removeItem('spc_pharmacy_settings');
             localStorage.removeItem('spc_pharmacy_sns_data');
             
-            // 2. 内部状態の初期化
             this.state.pharmacyName = '';
             this.state.area = '';
             this.state.hp = '';
-            this.state.mapUrl = ''; // Added
+            this.state.mapUrl = '';
             this.state.logoData = '';
             this.state.freeMemo = '';
             this.state.selectedSituations = [];
@@ -1105,41 +1235,31 @@ const app = {
             this.state.photo = 'entrance';
             this.state.purpose = 'consult';
             this.state.isDarkMode = false;
+            // Reset month to current
+            const today = new Date();
+            this.state.currentMonth = today.getMonth() + 1;
+            document.getElementById('monthSelector').value = this.state.currentMonth;
 
-            // 3. 入力フォームのクリア (DOM直接操作)
             const inputs = document.querySelectorAll('input[type="text"], input[type="url"], textarea, input[type="file"]');
             inputs.forEach(input => input.value = '');
 
-            // 4. ロゴ表示のリセット
             this.updateLogoPreview();
             this.updateMainLogo();
 
-            // 5. 選択グリッドのリセット (Visual)
-            // Situation: 全て非アクティブに
-            const sGrid = document.getElementById('situationGrid');
-            if (sGrid) {
-                Array.from(sGrid.children).forEach(el => el.classList.remove('active'));
-            }
-            // 他のグリッド: 初期値に戻す
+            this.renderSituations(); // Clear actives
             this.updateSelectGrid('toneGrid', 'kind');
             this.updateSelectGrid('photoGrid', 'entrance');
             this.updateSelectGrid('purposeGrid', 'consult');
 
-            // 6. ダークモード解除
             document.body.classList.remove('dark-mode');
             const themeBtn = document.getElementById('themeToggleBtn');
             if(themeBtn) themeBtn.innerText = 'ダークモードに切替';
 
-            // 7. 画面状態リセット
             document.getElementById('resultBox').innerText = 'ここに生成された文章が表示されます。';
             this.backToEdit();
             
-            // モーダル閉じる
             this.toggleModal('resetConfirmModal', false);
-            
-            // スクロールトップ
             window.scrollTo(0, 0);
-            
             alert('データを削除しました。');
             
         } catch (e) {
@@ -1166,9 +1286,15 @@ const app = {
         // 1. Situation Text
         let situationText = "";
         if (this.state.selectedSituations.length > 0) {
+            // Need to look up in both common and current seasonal
+            const common = this.data.commonSituations;
+            const seasonal = this.data.monthlySituations[this.state.currentMonth] || [];
+            const all = [...seasonal, ...common];
+
             situationText = this.state.selectedSituations.map(id => {
-                return this.data.situations.find(s => s.id === id).text;
-            }).join(' ');
+                const found = all.find(s => s.id === id);
+                return found ? found.text : '';
+            }).filter(t => t).join(' ');
         } else {
             situationText = "今日も元気に開局しております。";
         }
@@ -1231,7 +1357,7 @@ const app = {
         const name = this.state.pharmacyName;
         const area = this.state.area;
         const hp = this.state.hp;
-        const mapUrl = this.state.mapUrl; // Added
+        const mapUrl = this.state.mapUrl;
 
         // Signature Builder
         let signature = ``;
@@ -1239,7 +1365,7 @@ const app = {
             signature += `\n\n---\n${name}`;
             if (area) signature += `\n${area}`;
             if (hp) signature += `\n${hp}`;
-            if (mapUrl) signature += `\n📍地図: ${mapUrl}`; // Added
+            if (mapUrl) signature += `\n📍地図: ${mapUrl}`;
         }
 
         // Tags
@@ -1254,14 +1380,14 @@ const app = {
 
         if (platform === 'instagram') {
             let info = "";
-            if (mapUrl) info += `\n📍地図: ${mapUrl}`; // Added for Instagram text
+            if (mapUrl) info += `\n📍地図: ${mapUrl}`;
             formatted = text.replace(/\n/g, '\n\n') + `\n\n👇\n${cta}` + info + tags.instagram;
         } else if (platform === 'facebook') {
             formatted = text + `\n\n${cta}` + tags.facebook;
         } else if (platform === 'x') {
             formatted = text + `\n${cta}` + tags.x;
             if (hp) formatted += `\n${hp}`;
-            if (mapUrl) formatted += `\n📍地図: ${mapUrl}`; // Added for X
+            if (mapUrl) formatted += `\n📍地図: ${mapUrl}`;
         } else if (platform === 'line') {
             formatted = `【${name}】\n\n` + text + `\n\n----------------\n${cta}` + tags.line;
         }
@@ -1345,11 +1471,9 @@ const app = {
     copyToClipboard() {
         const text = document.getElementById('resultBox').innerText;
         
-        // フォールバック処理：textareaを作成してコピー
         const copyFallback = (str) => {
             const textarea = document.createElement('textarea');
             textarea.value = str;
-            // 画面外に配置して見えないようにする
             textarea.style.position = 'fixed';
             textarea.style.left = '-9999px';
             textarea.style.top = '0';
@@ -1372,7 +1496,6 @@ const app = {
             document.body.removeChild(textarea);
         };
 
-        // 基本的にフォールバックを使用（互換性のため）
         copyFallback(text);
     }
 };
