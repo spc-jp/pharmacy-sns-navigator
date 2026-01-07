@@ -741,6 +741,13 @@
             <input type="url" id="settingHp" placeholder="https://...">
         </div>
 
+        <!-- Google Map Setting Added -->
+        <div class="input-group">
+            <label>Googleマップ共有URL</label>
+            <input type="url" id="settingMap" placeholder="https://maps.app.goo.gl/...">
+            <p style="font-size:0.7rem; color:var(--text-sub); margin-top:4px;">※投稿の署名欄に「📍地図: URL」として追加されます</p>
+        </div>
+
         <div style="text-align:center; margin-top:20px;">
             <button class="btn btn-primary" onclick="app.saveSettings()">保存して閉じる</button>
         </div>
@@ -808,6 +815,7 @@ const app = {
         pharmacyName: '',
         area: '',
         hp: '',
+        mapUrl: '', // Added
         logoData: '', // Base64 string
         freeMemo: '',
         currentPlatform: 'instagram',
@@ -910,6 +918,7 @@ const app = {
                 document.getElementById('settingName').value = this.state.pharmacyName || '';
                 document.getElementById('settingArea').value = this.state.area || '';
                 document.getElementById('settingHp').value = this.state.hp || '';
+                document.getElementById('settingMap').value = this.state.mapUrl || ''; // Added
                 this.updateLogoPreview(); // Ensure preview is up to date
             }
         } else {
@@ -931,6 +940,7 @@ const app = {
         this.state.pharmacyName = document.getElementById('settingName').value.trim();
         this.state.area = document.getElementById('settingArea').value.trim();
         this.state.hp = document.getElementById('settingHp').value.trim();
+        this.state.mapUrl = document.getElementById('settingMap').value.trim(); // Added
 
         // Update main input placeholder/value & Logo
         this.updateMainInput();
@@ -941,6 +951,7 @@ const app = {
             name: this.state.pharmacyName,
             area: this.state.area,
             hp: this.state.hp,
+            map: this.state.mapUrl, // Added
             dark: this.state.isDarkMode,
             logo: this.state.logoData
         };
@@ -964,6 +975,7 @@ const app = {
                 this.state.pharmacyName = s.name || '';
                 this.state.area = s.area || '';
                 this.state.hp = s.hp || '';
+                this.state.mapUrl = s.map || ''; // Added
                 this.state.isDarkMode = !!s.dark;
                 this.state.logoData = s.logo || '';
                 
@@ -1012,7 +1024,8 @@ const app = {
             // 1. データセット
             this.state.pharmacyName = 'ひまわり薬局';
             this.state.area = '世田谷区';
-            this.state.hp = 'https://www.himawari.com/'; // URL変更
+            this.state.hp = 'https://www.himawari.com/'; 
+            this.state.mapUrl = 'https://goo.gl/maps/demo'; // Added demo map
             this.state.freeMemo = '今日は足元が滑りやすくなっているのでお気をつけて。';
             this.state.selectedSituations = ['rain', 'senior'];
             this.state.tone = 'kind';
@@ -1026,6 +1039,7 @@ const app = {
             setVal('settingName', this.state.pharmacyName);
             setVal('settingArea', this.state.area);
             setVal('settingHp', this.state.hp);
+            setVal('settingMap', this.state.mapUrl); // Added
             setVal('pharmacyName', this.state.pharmacyName);
             setVal('freeMemo', this.state.freeMemo);
 
@@ -1083,6 +1097,7 @@ const app = {
             this.state.pharmacyName = '';
             this.state.area = '';
             this.state.hp = '';
+            this.state.mapUrl = ''; // Added
             this.state.logoData = '';
             this.state.freeMemo = '';
             this.state.selectedSituations = [];
@@ -1216,6 +1231,7 @@ const app = {
         const name = this.state.pharmacyName;
         const area = this.state.area;
         const hp = this.state.hp;
+        const mapUrl = this.state.mapUrl; // Added
 
         // Signature Builder
         let signature = ``;
@@ -1223,6 +1239,7 @@ const app = {
             signature += `\n\n---\n${name}`;
             if (area) signature += `\n${area}`;
             if (hp) signature += `\n${hp}`;
+            if (mapUrl) signature += `\n📍地図: ${mapUrl}`; // Added
         }
 
         // Tags
@@ -1236,12 +1253,15 @@ const app = {
         let formatted = "";
 
         if (platform === 'instagram') {
-            formatted = text.replace(/\n/g, '\n\n') + `\n\n👇\n${cta}` + tags.instagram;
+            let info = "";
+            if (mapUrl) info += `\n📍地図: ${mapUrl}`; // Added for Instagram text
+            formatted = text.replace(/\n/g, '\n\n') + `\n\n👇\n${cta}` + info + tags.instagram;
         } else if (platform === 'facebook') {
             formatted = text + `\n\n${cta}` + tags.facebook;
         } else if (platform === 'x') {
             formatted = text + `\n${cta}` + tags.x;
             if (hp) formatted += `\n${hp}`;
+            if (mapUrl) formatted += `\n📍地図: ${mapUrl}`; // Added for X
         } else if (platform === 'line') {
             formatted = `【${name}】\n\n` + text + `\n\n----------------\n${cta}` + tags.line;
         }
